@@ -129,9 +129,9 @@ ESP32 不會移動游標，只負責按下一顆滑鼠按鈕，iOS 會執行你�
 
 > 請填入你自己的環境，例如：
 > - 開發板：ESP32-WROOM-32 DevKit
-> - ESP32 Arduino core：3.x.x
-> - NimBLE-Arduino：2.3.x
-> - iPhone / iOS：（機型與版本）
+> - ESP32 Arduino core：3.3.12
+> - NimBLE-Arduino：2.5.2
+> - iPhone / iOS：iPhone 15 Pro (ios 27.2)
 
 ## 免責聲明
 
