@@ -127,11 +127,10 @@ Make sure AssistiveTouch is enabled and the button is bound. See [Tips and troub
 
 ## Tested on
 
-> Fill in your own setup, for example:
 > - Board: ESP32-WROOM-32 DevKit
-> - ESP32 Arduino core: 3.x.x
-> - NimBLE-Arduino: 2.3.x
-> - iPhone / iOS: (model and version)
+> - ESP32 Arduino core: 3.3.12
+> - NimBLE-Arduino: 2.5.2
+> - iPhone / iOS: iPhone 15 Pro (ios 27.2)
 
 ## Disclaimer
 
