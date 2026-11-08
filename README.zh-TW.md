@@ -1,6 +1,12 @@
 # ESP32 iOS AutoSwipe
 
-使用 ESP32 模擬 Bluetooth LE HID 滑鼠，定時向 iPhone 發送滑鼠按鍵點擊，觸發 iOS AssistiveTouch 中預先設定的動作（例如捲動或滑動手勢），讓影片瀏覽等操作可以自動執行。
+[English](README.md) | **繁體中文**
+
+使用 ESP32 模擬 Bluetooth LE HID 滑鼠，定時向 iPhone 發送滑鼠按鍵點擊，觸發 iOS AssistiveTouch 中預先設定的動作（例如捲動或滑動手勢），讓操作可以免持、自動執行。
+
+> 本專案最初在 **Claude（Anthropic）** 的協助下開始，後續 **ChatGPT（OpenAI）** 也加入了開發與文件整理。專案方向、實機測試與最終決策仍由專案作者主導。
+
+> 本專案使用 [HijelHID_BLEMouse](https://github.com/HijelHub/HijelHID_BLEMouse) 與 [NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino)。
 
 > **專案狀態：** DIY 實驗專案。iOS 版本不同，設定選單名稱與操作方式可能略有差異。本文以 V2 韌體的操作流程為準。
 
@@ -233,3 +239,13 @@ auth reset
 ## 免責聲明
 
 本專案屬於實驗性 DIY 工具。請先確認 iOS 動作設定正確，再讓裝置長時間自動執行。因裝置或 iOS 設定造成的誤觸、捲動、資料使用或其他影響，使用者需自行承擔。
+
+## 致謝與貢獻
+
+- **專案發起與維護：** [stJL](https://github.com/stJL)，負責提出構想、整合硬體、實機測試及決定專案方向。
+- **Claude（Anthropic）：** 協助專案初期的構思、設計、程式撰寫與除錯。
+- **ChatGPT（OpenAI）：** 後續加入協作，協助持續開發、Web Panel 與 Profiles 討論、API／文件整理及問題排查。
+- [HijelHub/HijelHID_BLEMouse](https://github.com/HijelHub/HijelHID_BLEMouse)：提供 BLE HID Mouse 函式庫。請詳閱其授權條款及 README 中的商業使用說明。
+- [h2zero/NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino)：提供 BLE 通訊函式庫。
+
+這是一個由實作、測試與協作逐步完成的專案。感謝所有協助過這個專案的人，以及開源社群提供的工具與成果。

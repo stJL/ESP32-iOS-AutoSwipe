@@ -1,6 +1,12 @@
 # ESP32 iOS AutoSwipe
 
+**English** | [繁體中文](README.zh-TW.md)
+
 An ESP32-based Bluetooth HID mouse controller for triggering iOS AssistiveTouch actions. AutoSwipe can periodically send a mouse-button click to an iPhone, allowing a configured AssistiveTouch action (for example, a scrolling or swipe gesture) to be triggered hands-free.
+
+> This project began with the help of **Claude (Anthropic)**. **ChatGPT (OpenAI)** later joined the development and documentation work. The project direction, testing, and final decisions remain with the project owner.
+
+> Built on [HijelHID_BLEMouse](https://github.com/HijelHub/HijelHID_BLEMouse) and [NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino).
 
 > **Project status:** Community DIY project. iOS menus and behavior may vary by iOS version. This documentation describes the V2 firmware workflow.
 
@@ -230,3 +236,13 @@ The session may have expired or been revoked. Sign in again with the API key cur
 ## Disclaimer
 
 This is an experimental DIY project. Use it responsibly and test the configured iOS action before leaving it unattended. The author is not responsible for unintended taps, scrolling, data usage, or other effects caused by device or iOS configuration.
+
+## Credits and acknowledgements
+
+- **Project creator and maintainer:** [stJL](https://github.com/stJL), who shaped the idea, hardware setup, testing, and project direction.
+- **Claude (Anthropic):** helped initiate the project and contributed to its design, implementation, and debugging.
+- **ChatGPT (OpenAI):** joined later and helped with continued development, Web Panel and Profiles discussions, API/documentation work, and troubleshooting.
+- [HijelHub/HijelHID_BLEMouse](https://github.com/HijelHub/HijelHID_BLEMouse): BLE HID mouse library. Please review its license and README, including any commercial-use notes.
+- [h2zero/NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino): BLE stack library.
+
+This project is a collaborative effort: thank you to the people and open-source projects that helped make it possible.
