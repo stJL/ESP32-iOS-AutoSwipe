@@ -1,143 +1,232 @@
 # ESP32 iOS AutoSwipe
 
-**English** | [繁體中文](README.zh-TW.md)
+An ESP32-based Bluetooth HID mouse controller for triggering iOS AssistiveTouch actions. AutoSwipe can periodically send a mouse-button click to an iPhone, allowing a configured AssistiveTouch action (for example, a scrolling or swipe gesture) to be triggered hands-free.
 
-Turn an ESP32 into a Bluetooth Low Energy (BLE) mouse that presses a mouse button at random intervals. On the iPhone, **AssistiveTouch** maps that button to any action you like, such as a recorded swipe gesture or Scroll Down. The result is a hands-free, randomly timed swipe.
+> **Project status:** Community DIY project. iOS menus and behavior may vary by iOS version. This documentation describes the V2 firmware workflow.
 
-> Built on [HijelHID_BLEMouse](https://github.com/HijelHub/HijelHID_BLEMouse) and NimBLE-Arduino.
-> **This project was written with the help of Claude (Anthropic).**
+## Features
 
----
+- Bluetooth LE HID mouse connection to iPhone.
+- Configurable automatic trigger interval (minimum and maximum seconds).
+- Selectable mouse button: Back, Forward, or Middle.
+- Configurable click hold duration.
+- Physical BOOT button controls for pause/resume and Wi-Fi setup.
+- Browser-based Web Panel for runtime control and configuration.
+- Five editable, collapsible profiles.
+- Temporary settings or saved custom settings.
+- HTTP API for Shortcuts and other LAN automations.
+- API-key login and trusted-browser sessions for the Web Panel.
+- Settings and profiles stored in ESP32 non-volatile storage (NVS).
 
-## How it works
+## Hardware and software
 
-```
-ESP32 (BLE mouse)  --press Back button-->  iPhone AssistiveTouch  -->  your chosen action
-   every 29-39 s                            (Customize Buttons)         (swipe gesture / scroll)
-```
+### Hardware
 
-The ESP32 does not move the cursor. It only presses one mouse button, and iOS runs whatever action you bound to that button. A recorded custom gesture contains absolute screen coordinates, so the cursor position does not matter for it.
+- ESP32-WROOM-32 development board (classic ESP32; not an ESP32-S3-specific build).
+- iPhone with Bluetooth and AssistiveTouch support.
+- USB data cable for flashing and serial setup.
 
-## Use cases
+### Firmware build environment
 
-Any app that advances with a swipe can be driven this way, for example:
+The V2 project has been developed with:
 
-- E-readers, photo viewers and slideshows
-- Presentations and digital signage
-- Feed-style apps, including short-video apps (the author's own testing was done with one such app; results vary by app and iOS version)
-- Accessibility: reducing the need for repeated swiping
+- Arduino IDE
+- Arduino-ESP32 Core 3.3.12
+- NimBLE-Arduino 2.5.2
+- HijelHID_BLEMouse library
+- WiFiManager by tzapu
 
-Please respect the terms of service of the apps you automate.
-
-## Requirements
-
-| Item | Version |
-|---|---|
-| ESP32 board with BLE | All variants except ESP32-S2 and ESP32-P4 |
-| [ESP32 Arduino core](https://github.com/espressif/arduino-esp32) | 3.x |
-| [NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino) | >= 2.3.8 |
-| [HijelHID_BLEMouse](https://github.com/HijelHub/HijelHID_BLEMouse) | Latest (Library Manager: search "HijelHID") |
-| iPhone | AssistiveTouch must be enabled |
-
-`Preferences` (used to save settings) is part of the ESP32 core, so there is nothing extra to install.
+Use library/core versions compatible with the firmware source. If you use different versions, compilation or BLE behavior may differ.
 
 ## Installation
 
-1. Install the three libraries above in the Arduino IDE.
-2. Open `ESP32_iOS_AutoSwipe/ESP32_iOS_AutoSwipe.ino`.
-3. Select your ESP32 board and upload.
-4. Open the Serial Monitor at **115200 baud** (line ending: *Newline* is the most reliable; *No line ending* also works).
+1. Open the V2 `.ino` sketch in Arduino IDE.
+2. Install the required libraries listed above if they are not already installed.
+3. **Set your own API key** in the firmware before compiling. Find the `API_KEY` declaration and replace the public placeholder with a long, random value. Do not publish your private key.
+4. Connect the ESP32 and select the correct board and serial port.
+5. Select **Tools → Partition Scheme → Minimal SPIFFS** (the tested configuration for fitting the firmware).
+6. Compile and upload the sketch.
+7. Open Serial Monitor at the baud rate configured in the sketch and follow the startup messages. Record the ESP32's IP address if it is printed.
 
-## Setup on the iPhone
+The public repository should keep a placeholder in the source, not a working personal API key. Anyone who can read a public firmware source file containing a real key can reuse that key.
 
-Menu names can differ slightly between iOS versions.
+## First-time Wi-Fi setup
 
-1. **Enable AssistiveTouch:** Settings → Accessibility → Touch → AssistiveTouch → On.
-2. **Pair the ESP32:** Settings → Bluetooth → tap **BLE Mouse**. The Serial Monitor shows `iPhone paired!`.
-3. **Prepare the action you want to trigger.** Recommended: record a custom gesture at the speed and distance of your real swipe (AssistiveTouch → Create New Gesture). You can also use a built-in action such as Scroll Down.
-4. **Bind the button:**
-   1. Type `bind on` in the Serial Monitor. The ESP32 now sends the Back button every 2 seconds.
-   2. On the iPhone: AssistiveTouch → Devices → BLE Mouse → **Customize Buttons**.
-   3. Wait until iOS detects the button, then choose your action.
-   4. Type `bind off`.
-5. **Test it:** type `swipe` (or `b`). The iPhone should perform the action.
-6. Done. The ESP32 now repeats the action at random intervals (default 29–39 s).
+On startup, AutoSwipe attempts to connect using previously saved Wi-Fi credentials. If it cannot connect, it starts a configuration access point:
 
-## Serial commands
+- **SSID:** `AutoSwipe-Setup`
+- **Password:** `SwipeSetup27`
+- **Portal:** normally available at `http://192.168.4.1/` after connecting to the setup network.
 
-| Command | Description |
+Choose your Wi-Fi network and enter its password in the portal. After saving, the ESP32 will attempt to join that network.
+
+To reopen Wi-Fi configuration later, press and hold the ESP32 **BOOT** button for about 3 seconds. The device pauses while entering configuration mode. The setup portal has a limited timeout; if it closes, retry the long press.
+
+> The setup AP password is a firmware default, not a substitute for network security. Do not leave the setup AP available unnecessarily, and use a trusted Wi-Fi network.
+
+## Pairing with iPhone
+
+1. Power the ESP32 and wait for its BLE HID mouse to advertise.
+2. On the iPhone, open **Settings → Bluetooth**.
+3. Find the AutoSwipe mouse device and pair/connect it.
+4. Open **Settings → Accessibility → Touch → AssistiveTouch** and enable AssistiveTouch.
+5. In the AssistiveTouch device/button settings, configure the connected Bluetooth mouse button to perform the action you want AutoSwipe to trigger.
+6. Test the selected button manually before enabling automatic operation.
+
+Apple changes labels and navigation between iOS versions. The exact button-customization screen may differ. AutoSwipe sends a mouse-button click; the iPhone's AssistiveTouch configuration determines what that click does.
+
+### Button mapping
+
+| Firmware value | Mouse button |
+|---:|---|
+| `0` | Back |
+| `1` | Forward |
+| `2` | Middle |
+
+The Web Panel and serial commands let you select the button. Use **Bind** mode when you need repeated button events to help identify/configure the desired mouse button on iOS.
+
+## Physical button
+
+| BOOT button action | Function |
 |---|---|
-| `help`, `h`, `?` | Show the command list |
-| `status`, `s` | Show connection state and settings |
-| `p` | Toggle pause / resume |
-| `pause` / `resume` | Explicit pause / resume |
-| `swipe`, `b` | Send one swipe immediately |
-| `bind [on\|off]`, `k` | Bind mode: sends the button every 2 s so iOS can detect it |
-| `interval <min> <max>` | Swipe interval in seconds, e.g. `interval 25 45` |
-| `button <name>` | Which mouse button to press: `back`, `forward`, or `middle` |
-| `hold <ms>` | How long the button is held, 10–500 ms (default 50) |
-| `reset` | Restore defaults |
+| Short press | Toggle Pause / Resume |
+| Hold for about 3 seconds | Open Wi-Fi configuration portal |
 
-The **BOOT button** (GPIO 0) also toggles pause / resume. On boards where BOOT is on a different pin, change `PAUSE_BUTTON_PIN` at the top of the sketch.
+## Web Panel
 
-All settings are saved to flash (NVS) and survive reboots and re-uploads.
+After the ESP32 joins your Wi-Fi network, open either:
 
-## What `button` and `hold` do
+- `http://autoswipe.local/` (if mDNS works on your network), or
+- `http://<ESP32-IP>/` using the IP address printed in Serial Monitor or shown by your router.
 
-- **`button <name>`**: the mouse has several buttons, and iOS binds actions **per button**. The ESP32 presses whichever button you choose here, and iOS runs the action bound to it. The default `back` is fine for most people. If you switch to another button, **re-bind it in iOS** (see step 4).
-- **`hold <ms>`**: a button press has a "down" and an "up" event, and `hold` is the time between them (default 50 ms). If iOS sometimes ignores the press, raise it, e.g. `hold 100`. If iOS reacts twice, lower it.
+Enter the API key configured in the firmware to sign in. The browser receives a session cookie so you do not need to enter the key for every action in that browser.
 
-## Tips and troubleshooting
+### Current Settings
 
-- **Nothing happens on the iPhone:** make sure AssistiveTouch is on. It is required for iOS to accept a Bluetooth mouse.
-- **iOS does not detect the button during binding:** keep `bind on` running and make sure the Serial Monitor shows `Bind click sent` every 2 seconds. Try `hold 100`.
-- **The press is sometimes missed:** increase `hold`.
-- **Edited the default interval in the code but nothing changed:** values saved in flash override the code. Type `reset` once to load the new defaults.
-- **Re-pairing:** if pairing gets stuck, remove "BLE Mouse" in the iPhone's Bluetooth settings and pair again.
-- **Pause while testing:** type `p` or press BOOT so the automatic swipe does not interrupt you.
+The Current Settings section controls the live runtime configuration:
 
-## Background: why a mapped button?
+- Mouse button
+- Minimum interval
+- Maximum interval
+- Click hold duration
 
-During development, two other approaches were tried with a short-video app:
+Temporary changes affect the running device but are not saved as the persistent configuration. Use the save/persist option when you want the custom settings to survive a reboot.
 
-- **Scroll wheel events** (`scroll` / `addScroll`): the success rate depended on the number of clicks and sat near a threshold, so results were inconsistent. These apps judge a page change by touch distance and release speed, which a wheel does not provide.
-- **Click-and-drag with the cursor:** the app did not accept it.
+### Profiles
 
-Letting iOS replay a real touch gesture through AssistiveTouch avoided both problems. This was observed in the author's own testing with one app. Your results may vary by app and iOS version.
+AutoSwipe V2 provides five profiles. Each profile can store its own name and settings.
 
-## FAQ
+- Expand a profile to edit it; collapse it when not in use.
+- **Save Changes** saves the profile's values. It does not activate that profile.
+- **Apply** loads the profile into the running configuration and makes it the active saved profile.
+- Resetting a profile restores that profile's defaults.
+- Reset All resets all profile definitions; it does not change the currently running settings.
 
-**Can I use this with short-video apps?**
-In principle, yes: it works with any app that advances with a swipe. The author tested it with one such app, but results depend on the app and iOS version. Please respect the app's terms of service.
+Saving a profile and applying a profile are deliberately separate actions. This lets you prepare or edit profiles without interrupting the current run.
 
-**Does it move the cursor?**
-No. The ESP32 only presses a mouse button, and iOS runs the action you bound to it. A recorded custom gesture uses absolute screen coordinates, so cursor position does not matter. If you bind a built-in action that depends on the cursor position, test it before relying on it.
+### Trusted browsers
 
-**Does it work on Android?**
-Not tested. The BLE mouse library itself supports Android, but the button-mapping steps in this guide are specific to iOS AssistiveTouch.
+The Web Panel supports up to four trusted browser sessions. You can revoke an individual browser or revoke all trusted browsers from the panel. Revoking sessions does not change the firmware API key.
 
-**Why not just send scroll-wheel events?**
-Many swipe-to-next apps judge a page change by touch distance and release speed, which a scroll wheel does not provide. See [Background](#background-why-a-mapped-button).
+## iOS Shortcuts / HTTP API
 
-**Does the iPhone screen have to stay on?**
-Yes, a gesture can only affect the app while the screen is on and unlocked. For long sessions, consider adjusting Auto-Lock in the iPhone's display settings.
+The legacy HTTP endpoints are useful for Apple Shortcuts. They use **GET** requests and require the `X-API-Key` header.
 
-**It does nothing on my iPhone.**
-Make sure AssistiveTouch is enabled and the button is bound. See [Tips and troubleshooting](#tips-and-troubleshooting).
+Base URL:
 
-## Tested on
+```text
+http://autoswipe.local
+```
 
-> - Board: ESP32-WROOM-32 DevKit
-> - ESP32 Arduino core: 3.3.12
-> - NimBLE-Arduino: 2.5.2
-> - iPhone / iOS: iPhone 15 Pro (ios 27.2)
+If mDNS is unavailable, replace the hostname with the ESP32's IP address, for example `http://192.168.1.50`.
+
+Available endpoints:
+
+| Method | Path | Action |
+|---|---|---|
+| GET | `/status` | Read device status |
+| GET | `/pause` | Pause automatic triggering |
+| GET | `/resume` | Resume automatic triggering |
+| GET | `/toggle` | Toggle pause/resume |
+
+For Apple Shortcuts, add **Get Contents of URL**, set the method to **GET**, and add this header:
+
+| Header field | Value |
+|---|---|
+| Key | `X-API-Key` |
+| Value | Your private firmware API key |
+
+Example URL:
+
+```text
+http://autoswipe.local/pause
+```
+
+Create separate shortcuts by changing the final path to `/resume`, `/toggle`, or `/status`. Keep the key private; do not include it in screenshots, shared shortcuts, public issue reports, or repository commits.
+
+See [`docs/API.md`](docs/API.md) for the endpoint and security overview.
+
+## Serial Monitor commands
+
+The firmware includes these serial commands:
+
+```text
+help
+status
+p
+pause
+resume
+swipe
+bind
+interval
+button
+hold
+reset
+auth reset
+```
+
+Use `help` in Serial Monitor for the firmware's command syntax and accepted arguments. `auth reset` clears trusted Web Panel browser registrations; it is not the same as changing the API key.
+
+## Persistence and reset behavior
+
+- Main settings are stored in NVS under the `swipe` namespace.
+- Profile data is stored separately under `swipe-prof`.
+- Web Panel trusted-browser authentication data is stored separately under `swipe-auth`.
+- Wi-Fi credentials are managed by WiFiManager.
+
+A normal settings reset is not a factory erase: it does not clear Wi-Fi credentials, BLE pairing information, browser authentication, or all profile data. Check the confirmation text in the Web Panel before proceeding.
+
+## Network and security notes
+
+- The device's HTTP server uses plain HTTP, not HTTPS. Use it only on a trusted local network.
+- **Do not port-forward the ESP32 web server to the public internet.**
+- A LAN API key is a useful access gate, but it does not encrypt HTTP traffic. Anyone able to observe unencrypted traffic on the network may be able to capture the key or session cookie.
+- For remote access, prefer a private VPN such as Tailscale or WireGuard rather than exposing the ESP32 directly.
+- Use a unique, randomly generated API key. Rotate it if it was ever committed, shared, or exposed.
+- The Wi-Fi setup AP password is a project default; keep physical access to the device controlled.
+
+## Troubleshooting
+
+### `autoswipe.local` does not open
+
+Some routers and client devices do not resolve mDNS hostnames reliably. Use the ESP32 IP address from Serial Monitor or your router's DHCP client list.
+
+### iPhone does not respond to automatic clicks
+
+- Confirm the ESP32 is paired/connected in iPhone Bluetooth settings.
+- Confirm AssistiveTouch is enabled.
+- Confirm the selected mouse button is assigned to the intended AssistiveTouch action.
+- Test the button manually and try Bind mode if needed.
+- Check that AutoSwipe is not paused.
+
+### Firmware does not fit
+
+Select **Tools → Partition Scheme → Minimal SPIFFS** and compile again. Ensure the selected board is the intended classic ESP32 target.
+
+### Web Panel asks for the API key again
+
+The session may have expired or been revoked. Sign in again with the API key currently compiled into the firmware. If you changed the key, reflash the device with the updated firmware.
 
 ## Disclaimer
 
-Use at your own risk. Please respect the terms of service of any app you automate, and the laws that apply to you.
-
-## Credits
-
-- [HijelHub/HijelHID_BLEMouse](https://github.com/HijelHub/HijelHID_BLEMouse): the BLE HID mouse library (Apache-2.0). Please read its README for its commercial-use note.
-- [h2zero/NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino)
-- **Claude (Anthropic)** helped design, write and debug this project.
+This is an experimental DIY project. Use it responsibly and test the configured iOS action before leaving it unattended. The author is not responsible for unintended taps, scrolling, data usage, or other effects caused by device or iOS configuration.
